@@ -38,47 +38,47 @@ export function setState(init: { id: string; nickname: string; token: string }) 
 }
 
 const p1StartingPostionVectors = [
-  new Vector(25, 65),
-  new Vector(25, 100),
-  new Vector(25, 135),
-  new Vector(25, 170),
-  new Vector(25, 205),
-  new Vector(25, 240),
-  new Vector(25, 275),
-  new Vector(25, 310),
+  new Vector(50, 125),
+  new Vector(50, 185),
+  new Vector(50, 245),
+  new Vector(50, 305),
+  new Vector(50, 365),
+  new Vector(50, 425),
+  new Vector(50, 485),
+  new Vector(50, 545),
 ];
 
 const p2StartingPostionVectors = [
-  new Vector(550, 65),
-  new Vector(550, 100),
-  new Vector(550, 135),
-  new Vector(550, 170),
-  new Vector(550, 205),
-  new Vector(550, 240),
-  new Vector(550, 275),
-  new Vector(550, 310),
+  new Vector(1150, 160),
+  new Vector(1150, 220),
+  new Vector(1150, 280),
+  new Vector(1150, 340),
+  new Vector(1150, 400),
+  new Vector(1150, 460),
+  new Vector(1150, 520),
+  new Vector(1150, 580),
 ];
 
 const boardPositions = [
-  new Vector(200, 175),
-  new Vector(275, 175),
-  new Vector(350, 175),
-  new Vector(425, 175),
-  new Vector(200, 250),
-  new Vector(275, 250),
-  new Vector(350, 250),
-  new Vector(425, 250),
-  new Vector(200, 325),
-  new Vector(275, 325),
-  new Vector(350, 325),
-  new Vector(425, 325),
-  new Vector(200, 400),
-  new Vector(275, 400),
-  new Vector(350, 400),
-  new Vector(425, 400),
+  new Vector(207, 83),
+  new Vector(270, 83),
+  new Vector(333, 83),
+  new Vector(396, 83),
+  new Vector(207, 144),
+  new Vector(270, 144),
+  new Vector(333, 144),
+  new Vector(396, 144),
+  new Vector(207, 205),
+  new Vector(270, 205),
+  new Vector(333, 205),
+  new Vector(396, 205),
+  new Vector(207, 267),
+  new Vector(270, 267),
+  new Vector(333, 267),
+  new Vector(396, 267),
 ];
 
-const boardPosition = new Vector(300, 175);
+const boardPosition = new Vector(600, 350);
 
 export class Game extends Scene {
   //General Purpose Items
@@ -161,15 +161,18 @@ export class Game extends Scene {
   // ******************** */
   // UIState Variables ** */
   // ******************** */
+  p1Hoverstates: Boolean[] = [false, false, false, false, false, false, false, false];
+  p2Hoverstates: Boolean[] = [false, false, false, false, false, false, false, false];
   player1Name = "Larry";
   player2Name = "Robert";
-  showWaiting = true;
+  showWaiting = false;
   showConfirm = false;
   showToast = false;
   showTimerWarning = false;
   playerIdentifier = "player1";
   turnIdentifier = "player1";
   blur = "";
+  toastContent = "This is a toast message";
 
   // ******************** */
   // Excalibur Data ***** */
@@ -195,6 +198,20 @@ export class Game extends Scene {
   get isPlayer2Active() {
     if (state.p2state) return "ready";
     else return "waiting";
+  }
+
+  get p1HoverStates() {
+    let isHovering = this.p1Hoverstates.some(hov => hov == true);
+    let isHovering2 = this.p2Hoverstates.some(hov => hov == true);
+    console.log("isHovering: ", isHovering);
+    let elem = document.getElementById("App");
+    if (elem && (isHovering || isHovering2)) {
+      //set hover cursor
+      elem.classList.add("hoverCursor");
+    } else if (elem && !isHovering && !isHovering2) {
+      elem.classList.remove("hoverCursor");
+    }
+    return isHovering;
   }
 
   async onActivate(ctx: SceneActivationContext<unknown>): Promise<void> {
@@ -239,11 +256,11 @@ export class Game extends Scene {
         this.p1ActorTokens.push(
           new Actor({
             name: "token",
-            width: 40,
-            height: 40,
+            width: 80,
+            height: 80,
             pos: p1StartingPostionVectors[index],
             color: Color.Transparent,
-            z: 2,
+            z: 3,
           })
         );
       } else {
@@ -251,19 +268,19 @@ export class Game extends Scene {
         this.p2ActorTokens.push(
           new Actor({
             name: "token",
-            width: 40,
-            height: 40,
+            width: 80,
+            height: 80,
             pos: p2StartingPostionVectors[index - 8],
             color: Color.Transparent,
-            z: 2,
+            z: 3,
           })
         );
       }
       this.boardSpots.push(
         new Actor({
           name: "hole",
-          width: 100,
-          height: 100,
+          width: 80,
+          height: 80,
           pos: boardPositions[index],
           color: Color.Transparent,
           z: 2,
@@ -273,8 +290,8 @@ export class Game extends Scene {
     //create board actor
     this.boardActor = new Actor({
       name: "board",
-      width: 250,
-      height: 250,
+      width: 500,
+      height: 500,
       pos: boardPosition,
       color: Color.Transparent,
       z: 1,
@@ -284,18 +301,18 @@ export class Game extends Scene {
     this.p1ActorTokens.forEach((act, ind) => (act.graphics.material = this.listOfP1StarShaderMaterials[ind]));
     this.p2ActorTokens.forEach((act, ind) => (act.graphics.material = this.listOfP2StarShaderMaterials[ind]));
     //@ts-ignore
-    this.boardSpots.forEach((act, ind) => (act.graphics.material = this.boardMaterial[ind]));
+    this.boardSpots.forEach((act, ind) => (act.graphics.material = this.listOfBoardSpotShadermaterials[ind]));
     this.boardActor.graphics.material = this.boardMaterial;
 
     //set uniforms
-    this.p1ActorTokens.forEach((act, ind) =>
+    this.p1ActorTokens.forEach(act =>
       act.graphics.material?.update(shader => {
         shader.setUniformFloatVector("U_resolution", new Vector(500, 500));
         shader.setUniform("uniform3f", "U_color", 0.75, 0.2, 0.2);
         shader.setUniformBoolean("U_highlight", false);
       })
     );
-    this.p2ActorTokens.forEach((act, ind) =>
+    this.p2ActorTokens.forEach(act =>
       act.graphics.material?.update(shader => {
         shader.setUniformFloatVector("U_resolution", new Vector(500, 500));
         shader.setUniform("uniform3f", "U_color", 0.2, 0.2, 0.8);
@@ -304,18 +321,53 @@ export class Game extends Scene {
     );
     this.boardSpots.forEach(act => {
       act.graphics.material?.update(shader => {
-        shader.setUniformBoolean("U_highlighted", false);
+        shader.setUniformBoolean("U_highlighted", true);
+        shader.setUniformFloat("u_opacity", 1.0);
       });
     });
     this.boardActor.graphics.material.update(shader => {
       shader.setUniformFloatVector("U_resolution", new Vector(800, 800));
     });
 
+    this.p1ActorTokens.forEach((act, ind: number) => {
+      act.on("pointerenter", () => {
+        console.log("in");
+
+        this.p1Hoverstates[ind] = true;
+      });
+      act.on("pointerleave", () => {
+        console.log("out");
+        this.p1Hoverstates[ind] = false;
+      });
+    });
+    this.p2ActorTokens.forEach((act, ind: number) => {
+      act.on("pointerenter", () => {
+        console.log("in");
+
+        this.p2Hoverstates[ind] = true;
+      });
+      act.on("pointerleave", () => {
+        console.log("out");
+        this.p2Hoverstates[ind] = false;
+      });
+    });
+
     //add actors to scene
+    console.log(this.boardSpots);
+    console.log(this.listOfBoardSpotShadermaterials);
+
     this.p1ActorTokens.forEach(act => this.add(act));
     this.p2ActorTokens.forEach(act => this.add(act));
-    this.boardSpots.forEach(act => this.add(act));
+    this.boardSpots.forEach(act => {
+      this.add(act);
+      act.graphics.opacity = 0;
+    });
+
     this.add(this.boardActor);
+
+    setTimeout(() => {
+      showToast(this, 4000);
+    }, 3000);
   }
 
   async onDeactivate(ctx: SceneActivationContext<undefined>): Promise<void> {
@@ -337,10 +389,43 @@ export class Game extends Scene {
     });
     this.p1ActorTokens.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
     this.p2ActorTokens.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
+    this.boardSpots.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
     this.boardActor.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time));
+    let hoverstate = this.p1HoverStates;
   }
 }
 
 export function updateHathoraState(serverState: any) {
   state = JSON.parse(JSON.stringify(serverState));
+}
+
+function fadeIn(act: Actor, time: number) {
+  let handler = setInterval(() => {
+    if (act.graphics.opacity >= 1) {
+      act.graphics.opacity = 1;
+      clearInterval(handler);
+      return;
+    }
+    act.graphics.opacity += 0.01;
+  }, time / 100);
+}
+
+function fadeOut(act: Actor, time: number) {
+  let handler = setInterval(() => {
+    if (act.graphics.opacity <= 0) {
+      act.graphics.opacity = 0;
+      clearInterval(handler);
+      return;
+    }
+    act.graphics.opacity -= 0.01;
+  }, time / 100);
+}
+
+function showToast(element: Scene, duration: number) {
+  //@ts-ignore
+  element.showToast = true;
+  setTimeout(() => {
+    //@ts-ignore
+    element.showToast = false;
+  }, duration);
 }

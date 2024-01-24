@@ -13,7 +13,7 @@ import bhole from "./assets/bhole_icon.png";
 //@ts-ignore
 import galaxy from "./assets/galaxy_icon.png";
 
-const gameWidth = 600;
+const gameWidth = 1200;
 const gameHeight = (gameWidth * 9) / 16;
 
 export const MP_Connection = new MultiPlayerInterface(

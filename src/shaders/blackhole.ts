@@ -7,7 +7,8 @@ uniform vec2 U_resolution;
 uniform float U_time;
 uniform bool U_highlighted;
 uniform sampler2D U_noise1;
-uniform sampler2D U_noise2; 
+uniform sampler2D U_noise2;
+uniform float u_opacity; 
 
 const float RETICULATION = 3.;  // strenght of dust texture
 const float NB_ARMS = 5.;       // number of arms
@@ -273,7 +274,7 @@ void main() {
 
     col_a = mix(col_a, vec4( 1.2* BULB_BLACK_COL, 1.0), 2.0*bulb_black);
     //gl_FragColor =col_a;
-    fragColor = col_a;
+    fragColor = col_a*u_opacity;
     fragColor.rgb = fragColor.rgb * fragColor.a;
 
 }`;
