@@ -1,12 +1,12 @@
 import "./style.css";
 import { UI, UIView } from "@peasy-lib/peasy-ui";
-import { Engine, DisplayMode, Color, Vector, GoToOptions } from "excalibur";
+import { Engine, DisplayMode, Color, Vector, GoToOptions, Actor } from "excalibur";
 import { AuthenticationType, MultiPlayerInterface } from "./Multiplayer";
 import { HathoraClient, HathoraConnection } from "@hathora/client-sdk";
 import { Login } from "./scenes/Login";
 import { Lobby } from "./scenes/Lobby";
 import { Game, updateHathoraState } from "./scenes/Game";
-import { starfieldPostProcessor } from "./shaders/starfield";
+//import { starfieldPostProcessor } from "./shaders/starfield";
 export const version = "0.0.6";
 //@ts-ignore
 import bhole from "./assets/bhole_icon.png";
@@ -83,14 +83,9 @@ window.addEventListener("resize", () => {
   UIstate.hudHeight = screen.viewport.height;
 });
 
-export const starfeild = new starfieldPostProcessor();
-game.graphicsContext.addPostProcessor(starfeild);
-starfeild.getShader().use();
-starfeild.getShader().setUniformFloatVector("U_resolution", new Vector(screen.viewport.width, screen.viewport.height));
-
 game.add("login", new Login());
 game.add("lobby", new Lobby());
 game.add("game", new Game());
-game.toggleDebug();
+//game.toggleDebug();
 game.start();
-game.goto("login", { sceneActivationData: { time: 0, starfeild } });
+game.goto("login", { sceneActivationData: { time: 0, engine: game, w: gameWidth, h: gameHeight } });

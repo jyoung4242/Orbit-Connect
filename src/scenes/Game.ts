@@ -1,5 +1,5 @@
 import { Actor, Color, Engine, ImageSource, Material, Scene, SceneActivationContext, Vector } from "excalibur";
-import { UIstate, starfeild, game, MP_Client, MP_Connection } from "../main";
+import { UIstate, game, MP_Client, MP_Connection } from "../main";
 import { UI, UIView } from "@peasy-lib/peasy-ui";
 import { waitSomeTime } from "../utils";
 import { starFrag } from "../shaders/star";
@@ -17,6 +17,14 @@ import check from "../assets/check.png";
 //@ts-ignore
 import waiting from "../assets/waiting.gif";
 
+type mySceneContext = {
+  time: number;
+  engine: Engine;
+  w: number;
+  h: number;
+  starfield: Actor;
+};
+
 let state = {
   user: { id: "", nickname: "", token: "" },
   p1state: false,
@@ -30,23 +38,25 @@ export function setState(init: { id: string; nickname: string; token: string }) 
 }
 
 const p1StartingPostionVectors = [
-  new Vector(50, 50),
-  new Vector(50, 80),
-  new Vector(50, 110),
-  new Vector(50, 140),
-  new Vector(50, 170),
-  new Vector(50, 200),
-  new Vector(50, 230),
+  new Vector(25, 65),
+  new Vector(25, 100),
+  new Vector(25, 135),
+  new Vector(25, 170),
+  new Vector(25, 205),
+  new Vector(25, 240),
+  new Vector(25, 275),
+  new Vector(25, 310),
 ];
 
 const p2StartingPostionVectors = [
-  new Vector(500, 50),
-  new Vector(500, 80),
-  new Vector(500, 110),
-  new Vector(500, 140),
-  new Vector(500, 170),
-  new Vector(500, 200),
-  new Vector(500, 230),
+  new Vector(550, 65),
+  new Vector(550, 100),
+  new Vector(550, 135),
+  new Vector(550, 170),
+  new Vector(550, 205),
+  new Vector(550, 240),
+  new Vector(550, 275),
+  new Vector(550, 310),
 ];
 
 const boardPositions = [
@@ -67,6 +77,8 @@ const boardPositions = [
   new Vector(350, 400),
   new Vector(425, 400),
 ];
+
+const boardPosition = new Vector(300, 175);
 
 export class Game extends Scene {
   //General Purpose Items
@@ -162,6 +174,7 @@ export class Game extends Scene {
   // ******************** */
   // Excalibur Data ***** */
   // ******************** */
+  _starfieldActor: Actor | undefined;
   p1ActorTokens: Actor[] = [];
   p2ActorTokens: Actor[] = [];
   boardActor: Actor = new Actor({});
@@ -186,6 +199,8 @@ export class Game extends Scene {
 
   async onActivate(ctx: SceneActivationContext<unknown>): Promise<void> {
     this._time = (ctx.data as { time: number }).time as number;
+    this._starfieldActor = (ctx.data as mySceneContext).starfield;
+    this.add(this._starfieldActor);
     console.log("in game");
     this.SceneView = UI.create(UIstate.hudLayer, this, this.template);
     //create shaders
@@ -224,8 +239,8 @@ export class Game extends Scene {
         this.p1ActorTokens.push(
           new Actor({
             name: "token",
-            width: 80,
-            height: 80,
+            width: 40,
+            height: 40,
             pos: p1StartingPostionVectors[index],
             color: Color.Transparent,
             z: 2,
@@ -236,8 +251,8 @@ export class Game extends Scene {
         this.p2ActorTokens.push(
           new Actor({
             name: "token",
-            width: 80,
-            height: 80,
+            width: 40,
+            height: 40,
             pos: p2StartingPostionVectors[index - 8],
             color: Color.Transparent,
             z: 2,
@@ -258,9 +273,9 @@ export class Game extends Scene {
     //create board actor
     this.boardActor = new Actor({
       name: "board",
-      width: 300,
-      height: 300,
-      pos: new Vector(200, 100),
+      width: 250,
+      height: 250,
+      pos: boardPosition,
       color: Color.Transparent,
       z: 1,
     });
@@ -272,7 +287,29 @@ export class Game extends Scene {
     this.boardSpots.forEach((act, ind) => (act.graphics.material = this.boardMaterial[ind]));
     this.boardActor.graphics.material = this.boardMaterial;
 
-    console.log("adding actors");
+    //set uniforms
+    this.p1ActorTokens.forEach((act, ind) =>
+      act.graphics.material?.update(shader => {
+        shader.setUniformFloatVector("U_resolution", new Vector(500, 500));
+        shader.setUniform("uniform3f", "U_color", 0.75, 0.2, 0.2);
+        shader.setUniformBoolean("U_highlight", false);
+      })
+    );
+    this.p2ActorTokens.forEach((act, ind) =>
+      act.graphics.material?.update(shader => {
+        shader.setUniformFloatVector("U_resolution", new Vector(500, 500));
+        shader.setUniform("uniform3f", "U_color", 0.2, 0.2, 0.8);
+        shader.setUniformBoolean("U_highlight", false);
+      })
+    );
+    this.boardSpots.forEach(act => {
+      act.graphics.material?.update(shader => {
+        shader.setUniformBoolean("U_highlighted", false);
+      });
+    });
+    this.boardActor.graphics.material.update(shader => {
+      shader.setUniformFloatVector("U_resolution", new Vector(800, 800));
+    });
 
     //add actors to scene
     this.p1ActorTokens.forEach(act => this.add(act));
@@ -294,8 +331,13 @@ export class Game extends Scene {
 
   onPreUpdate(engine: Engine, delta: number): void {
     this._time += delta / 1000;
-    starfeild.getShader().use();
-    starfeild.getShader().setUniformFloat("U_time", this._time);
+
+    (this._starfieldActor as Actor).graphics.material?.update(shader => {
+      shader.setUniformFloat("U_time", this._time);
+    });
+    this.p1ActorTokens.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
+    this.p2ActorTokens.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
+    this.boardActor.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time));
   }
 }
 

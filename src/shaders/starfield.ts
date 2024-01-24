@@ -16,10 +16,12 @@ export const starfieldfragment = `#version 300 es
 precision highp float;
 
 out vec4 fragColor;
-in vec2 v_texcoord;
+//in vec2 v_texcoord;
+in vec2 v_uv;
 
 uniform vec2 U_resolution;
 uniform float U_time;
+
 
 float inverseLerp(float v, float minValue, float maxValue) {
   return (v - minValue) / (maxValue - minValue);
@@ -232,7 +234,8 @@ vec3 GenerateStars(vec2 pixelCoords){
 }
 
 void main() {
-  vec2 pixelCoords = (v_texcoord - 0.5) * U_resolution;
+  vec2 pixelCoords = (v_uv - 0.5) * U_resolution;
+  
   vec3 colour = vec3(0.0);
   colour = GenerateStars(pixelCoords);
   fragColor = vec4(pow(colour, vec3(1.0 / 2.2)), 1.0);

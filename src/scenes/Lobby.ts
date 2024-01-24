@@ -1,5 +1,5 @@
-import { Engine, Scene, SceneActivationContext } from "excalibur";
-import { UIstate, starfeild, MP_Connection, game } from "../main";
+import { Actor, Engine, Scene, SceneActivationContext } from "excalibur";
+import { UIstate, MP_Connection, game } from "../main";
 import { UI, UIView } from "@peasy-lib/peasy-ui";
 import { waitSomeTime } from "../utils";
 import { LobbyVisibility, Region } from "@hathora/cloud-sdk-typescript/dist/sdk/models/shared";
@@ -9,8 +9,17 @@ import { LobbyStatus } from "../types";
 //@ts-ignore
 import spinner from "../assets/spinner.svg";
 
+type mySceneContext = {
+  time: number;
+  engine: Engine;
+  w: number;
+  h: number;
+  starfield: Actor;
+};
+
 export class Lobby extends Scene {
   _time: number = 0;
+  _starfieldActor: Actor | undefined;
   directPublicID: string = "";
   lobbyInterval: NodeJS.Timeout | null | undefined;
   userdata: UserData = {
@@ -91,7 +100,7 @@ export class Lobby extends Scene {
     console.log("Joining Room", roomToJoin);
     await MP_Connection.enterRoom(roomToJoin);
     //goto game
-    game.goto("game", { sceneActivationData: { time: this._time } });
+    game.goto("game", { sceneActivationData: { time: this._time, starfield: this._starfieldActor } });
   };
 
   joinDirectPublic = async (_e: any, m: any) => {
@@ -100,7 +109,7 @@ export class Lobby extends Scene {
     let roomToJoin = this.directPublicID;
     console.log("Joining Room", roomToJoin);
     await MP_Connection.enterRoom(roomToJoin);
-    game.goto("game", { sceneActivationData: { time: this._time } });
+    game.goto("game", { sceneActivationData: { time: this._time, starfield: this._starfieldActor } });
   };
 
   servers = [];
@@ -203,8 +212,12 @@ export class Lobby extends Scene {
   SceneView: UIView | undefined;
 
   onActivate(ctx: SceneActivationContext<unknown>): void {
-    this._time = (ctx.data as { time: number }).time as number;
+    this._time = (ctx.data as mySceneContext).time as number;
+    this._starfieldActor = (ctx.data as mySceneContext).starfield;
     console.log("in lobby");
+
+    this.add(this._starfieldActor);
+
     this.SceneView = UI.create(UIstate.hudLayer, this, this.template);
     this.servers = [];
     this.userdata = MP_Connection.userdata;
@@ -235,8 +248,10 @@ export class Lobby extends Scene {
 
   onPreUpdate(engine: Engine<any>, delta: number): void {
     this._time += delta / 1000;
-    starfeild.getShader().use();
-    starfeild.getShader().setUniformFloat("U_time", this._time);
+
+    (this._starfieldActor as Actor).graphics.material?.update(shader => {
+      shader.setUniformFloat("U_time", this._time);
+    });
   }
 
   updateLobby = async () => {

@@ -1,8 +1,9 @@
-import { Engine, Scene, SceneActivationContext } from "excalibur";
-import { version, MP_Connection, game, UIstate, starfeild } from "../main";
+import { Actor, Color, Engine, Scene, SceneActivationContext, Vector } from "excalibur";
+import { version, MP_Connection, game, UIstate } from "../main";
 import { UI, UIView } from "@peasy-lib/peasy-ui";
 import { setState } from "./Game";
-
+//@ts-ignore
+import { starFrag } from "../shaders/star";
 //@ts-ignore
 import settings from "../assets/settings.svg";
 //@ts-ignore
@@ -11,9 +12,14 @@ import access from "../assets/access.svg";
 import help from "../assets/help.svg";
 //@ts-ignore
 import spinner from "../assets/spinner.svg";
+import { starfieldfragment } from "../shaders/starfield";
 
 export class Login extends Scene {
   _time: number = 0;
+  _game: Engine | undefined;
+  _gameWidth: number = 0;
+  _gameHeight: number = 0;
+  _starfieldActor: Actor | undefined;
   version = version;
   showSpinner: boolean = false;
   isShowSettings: boolean = false;
@@ -95,7 +101,15 @@ export class Login extends Scene {
     loginResult = await this.login(this.nickname?.value);
 
     if (loginResult) {
-      game.goto("lobby", { sceneActivationData: { time: this._time } });
+      game.goto("lobby", {
+        sceneActivationData: {
+          time: this._time,
+          engine: this._game,
+          w: this._gameWidth,
+          h: this._gameHeight,
+          starfield: this._starfieldActor,
+        },
+      });
     }
   };
 
@@ -364,10 +378,30 @@ export class Login extends Scene {
   SceneView: UIView | undefined;
 
   onActivate(ctx: SceneActivationContext<unknown>): void {
-    console.log(ctx);
+    this._game = (ctx.data as { time: number; engine: Engine; w: number; h: number }).engine;
+    this._time = (ctx.data as { time: number; engine: Engine; w: number; h: number }).time as number;
+    this._gameWidth = (ctx.data as { time: number; engine: Engine; w: number; h: number }).w as number;
+    this._gameHeight = (ctx.data as { time: number; engine: Engine; w: number; h: number }).h as number;
+    console.log("in login", this._gameWidth, this._gameHeight);
 
-    this._time = (ctx.data as { time: number }).time as number;
-    console.log("in login");
+    //add starfield Actor
+
+    let starfieldMaterial = game.graphicsContext.createMaterial({ fragmentSource: starfieldfragment });
+    this._starfieldActor = new Actor({
+      name: "starfield",
+      width: this._gameWidth * 2,
+      height: this._gameHeight * 2,
+      z: 0,
+      pos: new Vector(0, 0),
+      color: Color.Transparent,
+    });
+
+    this._starfieldActor.graphics.material = starfieldMaterial;
+    this._starfieldActor.graphics.material.update(shader => {
+      shader.setUniformFloatVector("U_resolution", new Vector(this._gameWidth * 2, this._gameWidth * 2));
+    });
+    this.add(this._starfieldActor);
+
     this.SceneView = UI.create(UIstate.hudLayer, this, this.template);
 
     let activeSession = MP_Connection.checkForActiveToken();
@@ -396,7 +430,10 @@ export class Login extends Scene {
 
   onPreUpdate(engine: Engine, delta: number): void {
     this._time += delta / 1000;
-    starfeild.getShader().use();
-    starfeild.getShader().setUniformFloat("U_time", this._time);
+    //get starfield actor
+    let starfield = this.world.entityManager.getByName("starfield");
+    (starfield[0] as Actor).graphics.material?.update(shader => {
+      shader.setUniformFloat("U_time", this._time);
+    });
   }
 }
