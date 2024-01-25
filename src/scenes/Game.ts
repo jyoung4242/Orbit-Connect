@@ -49,33 +49,33 @@ const p1StartingPostionVectors = [
 ];
 
 const p2StartingPostionVectors = [
-  new Vector(1150, 160),
-  new Vector(1150, 220),
-  new Vector(1150, 280),
-  new Vector(1150, 340),
-  new Vector(1150, 400),
-  new Vector(1150, 460),
-  new Vector(1150, 520),
-  new Vector(1150, 580),
+  new Vector(1150, 125),
+  new Vector(1150, 185),
+  new Vector(1150, 245),
+  new Vector(1150, 305),
+  new Vector(1150, 365),
+  new Vector(1150, 425),
+  new Vector(1150, 485),
+  new Vector(1150, 545),
 ];
 
 const boardPositions = [
-  new Vector(207, 83),
-  new Vector(270, 83),
-  new Vector(333, 83),
-  new Vector(396, 83),
-  new Vector(207, 144),
-  new Vector(270, 144),
-  new Vector(333, 144),
-  new Vector(396, 144),
-  new Vector(207, 205),
-  new Vector(270, 205),
-  new Vector(333, 205),
-  new Vector(396, 205),
-  new Vector(207, 267),
-  new Vector(270, 267),
-  new Vector(333, 267),
-  new Vector(396, 267),
+  new Vector(415, 165),
+  new Vector(540, 165),
+  new Vector(665, 165),
+  new Vector(790, 165),
+  new Vector(415, 290),
+  new Vector(540, 290),
+  new Vector(665, 290),
+  new Vector(790, 290),
+  new Vector(415, 410),
+  new Vector(540, 410),
+  new Vector(665, 410),
+  new Vector(790, 410),
+  new Vector(415, 540),
+  new Vector(540, 540),
+  new Vector(665, 540),
+  new Vector(790, 540),
 ];
 
 const boardPosition = new Vector(600, 350);
@@ -92,8 +92,8 @@ export class Game extends Scene {
     <toast-layer \${===showToast}>\${toastContent}</toast-layer>
    
     <inactivity-timer \${===showTimerWarning}>
-        Inactivity Warning
-        Time until game cancellation: \${timeLeft} 
+        Inactivity Warning -
+        Time until game cancellation: \${timeLeft} seconds
     </inactivity-timer>
     
     <waiting-modal \${===showWaiting}>
@@ -131,10 +131,6 @@ export class Game extends Scene {
     
     <turn-identifier>It is \${turnIdentifier}'s turn</turn-identifier>
     
-    <end-turn class="endturncontainer" \${===showEndTurn}>
-      <div class="endturncontent">Your turn is completed, ready to change turns?</div>
-      <div class="confirm_ready" \${click@=>endTurn}>END TURN</div>
-    </end-turn>
     
     <player-left \${===showPlayerLeft}>
       <div>The other player left the match</div>
@@ -169,10 +165,13 @@ export class Game extends Scene {
   showConfirm = false;
   showToast = false;
   showTimerWarning = false;
+  showPlayerLeft = false;
+  showBlur = false;
   playerIdentifier = "player1";
   turnIdentifier = "player1";
   blur = "";
   toastContent = "This is a toast message";
+  timeLeft = 0;
 
   // ******************** */
   // Excalibur Data ***** */
@@ -279,8 +278,8 @@ export class Game extends Scene {
       this.boardSpots.push(
         new Actor({
           name: "hole",
-          width: 80,
-          height: 80,
+          width: 160,
+          height: 160,
           pos: boardPositions[index],
           color: Color.Transparent,
           z: 2,
@@ -366,7 +365,7 @@ export class Game extends Scene {
     this.add(this.boardActor);
 
     setTimeout(() => {
-      showToast(this, 4000);
+      showToast(this, "test me i'm a toast", 4000);
     }, 3000);
   }
 
@@ -391,7 +390,7 @@ export class Game extends Scene {
     this.p2ActorTokens.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
     this.boardSpots.forEach(act => act.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time)));
     this.boardActor.graphics.material?.update(shader => shader.setUniformFloat("U_time", this._time));
-    let hoverstate = this.p1HoverStates;
+    let hoverstate = this.p1HoverStates; //hover check on actors
   }
 }
 
@@ -421,7 +420,9 @@ function fadeOut(act: Actor, time: number) {
   }, time / 100);
 }
 
-function showToast(element: Scene, duration: number) {
+function showToast(element: Scene, message: string, duration: number) {
+  //@ts-ignore
+  element.toastContent = message;
   //@ts-ignore
   element.showToast = true;
   setTimeout(() => {

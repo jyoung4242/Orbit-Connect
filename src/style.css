@@ -412,7 +412,8 @@ blur-layer {
   width: 100%;
   height: 100%;
   background-color: #000000bb;
-  z-index: 99998;
+  z-index: 6;
+  filter: blur(4px);
 }
 waiting-modal {
   position: fixed;
@@ -465,7 +466,8 @@ confirm-modal {
   color: black;
   padding: 25px;
   border-radius: 15px;
-  font-size: x-small;
+  font-size: large;
+  font-family: subtext;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -474,33 +476,34 @@ confirm-modal {
   gap: 8px;
   opacity: 1;
   transition: opacity 0.4s;
+  width: 35%;
 }
 
 .confirm_title {
   font-weight: bolder;
   font-size: medium;
+  font-family: hero;
 }
 
 .confirm_outerflex {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
+  width: 80%;
 }
 .confirm_innerflex {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
+  font-family: subtext;
   gap: 5px;
-  width: 40%;
+  width: 50%;
 }
-.confirm_id {
-}
-.confirm_name {
-}
+
 .confirm_icon {
-  width: 16px;
+  width: 30px;
   aspect-ratio: 1/1;
   background-repeat: no-repeat;
   background-size: contain;
@@ -583,7 +586,8 @@ toast-layer {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: large;
+  font-size: 1.9vw;
+  font-family: subtext;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -648,14 +652,15 @@ turn-identifier {
 
 player-left {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: whitesmoke;
-  color: black;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(245, 245, 245, 0.528);
+  color: whitesmoke;
   padding: 25px;
   border-radius: 5px;
-  font-size: x-small;
+  font-size: large;
+  font-family: subtext;
+  font-weight: bold;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -665,13 +670,16 @@ player-left {
   opacity: 1;
   width: 25%;
   transition: opacity 0.4s linear;
+  z-index: 7;
 }
 
 inactivity-timer {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  font-size: xx-small;
+  right: 10px;
+  bottom: 10px;
+  font-size: 1.3vw;
+  font-family: subtext;
+  text-transform: uppercase;
   color: red;
 }
 .normCursor {
